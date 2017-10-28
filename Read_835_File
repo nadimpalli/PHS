@@ -1,0 +1,224 @@
+import os
+
+
+def trans_Code_indicator(value):
+    trans_code_value = {
+
+        "C" : "C: Payment Accompanies Remittance Advice",
+        "D" : "D: Make Payment Only",
+        "H" : "H: Notification Only",
+        "I" : "I: Remittance Information Only",
+        "P" : "P: Pre-notification of Future Transfers",
+        "U" : "U: Split Payment and Remittance",
+        "X" : "X: Handling Party’s Option to Split Payment and Remittance"
+    }
+
+    return(trans_code_value.get(value,"Invalid Tranaaction Code value" ))
+
+def credit_debit_indicator(value):
+
+    credit_debit_value = {
+
+        "C" : "Credit Flag: Payment due to provider initiated by the payer",
+        "D" : "Debit Flag: Payment due to the payer initiated by provider"
+
+    }
+
+    return(credit_debit_value.get(value,"Invalid Credit/Debit Flag"))
+
+def payment_method_indicator(value):
+
+    payment_method_value = {
+
+        "ACH" : "ACH : Money transfer via Automated Clearing House (ACH) was initiated",
+        "BOP" : "BOP : 3rd Party to choose the medthod of payment based on an agreement",
+        "CHK" : "CHK : Check Issued for Payment",
+        "FWT" : "FWT : Funds were sent through the wire system",
+        "NON" : "NON : Non-Payment Data"
+    }
+    return (payment_method_value.get(value, "Invalid Payment Method Indicator"))
+
+def payment_format_indicator(value):
+
+    payment_format_value = {
+
+        "CCP": "CCP : Cash Concentration/Disbursement plus Addenda ",
+        "CTX": "CTX : Corporate Trade Exchange"
+
+    }
+    return (payment_format_value.get(value, "Not an ACH Payment"))
+
+def dfi_id_number_indicator(value):
+
+    dfi_id_number_value = {
+
+        "01": "01 : ABA Transit Routing Number Including Check Digits ",
+        "04": "04 : Canadian Bank Branch and Institution Number"
+
+    }
+
+    return (dfi_id_number_value.get(value, "Not an ACH Payment"))
+
+def sender_account_number_qualifier_indicator(value):
+
+    account_number_qualifier_value = {
+
+        "DA": "DA : Demand Deposit"
+
+    }
+
+    return (account_number_qualifier_value.get(value, "Not an ACH Payment"))
+
+def receiver_account_number_qualifier_indicator(value):
+
+    account_number_qualifier_value = {
+
+        "DA": "DA : Demand Deposit",
+        "SG": "SG : Savings"
+
+    }
+
+    return (account_number_qualifier_value.get(value, "Not an ACH Payment"))
+
+
+
+def report_835(files):
+
+    open_835_file=open(files,'r')
+    read_835_file=open_835_file.readlines()
+
+    segements_pos=[]
+
+    file_id = read_835_file[0].split('*')[13]
+
+    if(len(read_835_file)>1):
+
+        for i in range(0,len(read_835_file)-1):
+            if ('ST' in read_835_file[i].split('*')[0]  and '835' in read_835_file[i].split('*')[1]):
+                segements_pos.append(i)
+            elif ('SE' in read_835_file[i].split('*')[0]):
+                segements_pos.append(i)
+
+        segements_pos.append(len(read_835_file))
+
+
+        for j in range(0,len(segements_pos)-1):
+
+            transaction_handling_code = []
+            provider_payment_amount = []
+            credit_debit_flag = []
+            payment_method_mode = []
+            payment_format_code = []
+            sender_dfi_id_number_qualifier = []
+            sender_dfi_id_number = []
+            sender_account_number_qualifier = []
+            sender_bank_account_number = []
+            payer_id = []
+            receiever_dfi_id_number_qualifier = []
+            receiever_dfi_id_number = []
+            receiever_account_number_qualifier = []
+            receiever_bank_account_number = []
+            check_issuance_date = []
+            payer_id_transferring_payment = []
+            adjudication_date = []
+            insurance_name =[]
+
+            for k in range(segements_pos[j],segements_pos[j+1]):
+
+                if ('BPR' in read_835_file[k].split('*')[0]):
+
+                    transaction_handling_code = trans_Code_indicator(read_835_file[k].split('*')[1])
+                    provider_payment_amount = read_835_file[k].split('*')[2]
+                    credit_debit_flag = credit_debit_indicator(read_835_file[k].split('*')[3])
+                    payment_method_mode = payment_method_indicator(read_835_file[k].split('*')[4])
+                    payment_format_code = payment_format_indicator(read_835_file[k].split('*')[5])
+                    sender_dfi_id_number_qualifier = dfi_id_number_indicator(read_835_file[k].split('*')[6])
+
+
+                    if (read_835_file[k].split('*')[7].strip()!=''):
+
+                        sender_dfi_id_number = read_835_file[k].split('*')[7]
+
+                    else:
+
+                        sender_dfi_id_number = "NA as this is not a ACH payment"
+
+
+                    sender_account_number_qualifier = sender_account_number_qualifier_indicator(read_835_file[k].split('*')[8])
+
+
+                    if (read_835_file[k].split('*')[9].strip()!=''):
+
+                        sender_bank_account_number = read_835_file[k].split('*')[9]
+
+                    else:
+
+                        sender_bank_account_number = "NA as this is not a ACH payment"
+
+                    if (read_835_file[k].split('*')[10].strip() != ''):
+
+                        payer_id = read_835_file[k].split('*')[10]
+
+                    else:
+
+                        payer_id = "NA as this is not a ACH payment"
+
+
+
+                    receiever_dfi_id_number_qualifier = dfi_id_number_indicator(read_835_file[k].split('*')[12])
+
+
+
+                    if (read_835_file[k].split('*')[13].strip() != ''):
+
+                        reciever_dfi_id_number = read_835_file[k].split('*')[13]
+
+                    else:
+
+                        receiever_dfi_id_number = "NA as this is not a ACH payment"
+
+
+
+                    receiever_account_number_qualifier = receiver_account_number_qualifier_indicator(read_835_file[k].split('*')[14])
+
+
+                    if (read_835_file[k].split('*')[15].strip() != ''):
+
+                        receiever_bank_account_number = read_835_file[k].split('*')[15]
+
+                    else:
+
+                        receiever_bank_account_number = "NA as this is not a ACH payment"
+
+                    check_issuance_date = read_835_file[k].split('*')[16]
+
+                if ('TRN' in read_835_file[k].split('*')[0]):
+
+                    check_eft_reference_number = read_835_file[k].split('*')[2]
+
+                    payer_id_transferring_payment = read_835_file[k].split('*')[3]
+
+                if ('DTP' in read_835_file[k].split('*')[0] and '405' in read_835_file[k].split('*')[1]):
+
+                    adjudication_date = read_835_file[k].split('*')[2]
+
+
+                if ('N1' in read_835_file[k].split('*')[0] and 'PR' in read_835_file[k].split('*')[1]):
+
+                    insurance_name = read_835_file[k].split('*')[2]
+
+
+
+    else:
+        print("File needs to be split")
+
+
+loc_835_file = input("Enter the Location of 835 File: ")
+print(loc_835_file)
+
+for files in os.listdir(loc_835_file):
+    if 'ERA' in files:
+        report_835(files)
+
+
+
